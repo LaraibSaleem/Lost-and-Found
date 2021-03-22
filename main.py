@@ -80,7 +80,8 @@ def user_sign_up( user: schemas.user_schema.User, db: Session= Depends(get_db)):
 # log in
 @app.get("/users", response_model=List[schemas.user_schema.User])
 def user_log_in( uname: str, pw:str, db: Session= Depends(get_db)):
-    db_user = db.query(models.user_model.User).filter(models.user_model.User.uname == uname and models.user_model.User.pw == pw).first()
+    db_user = db.query(models.user_model.User).filter(models.user_model.User.uname == uname,
+                                                    models.user_model.User.pw == user.pw).one()
     if db_user:
         return [db_user]
     else:
