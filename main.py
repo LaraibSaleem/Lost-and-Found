@@ -9,7 +9,7 @@ from starlette.responses import RedirectResponse
 #importing other files of the app
 #from . import models, schemas
 import models, schemas
-from app.database import SessionLocal, engine
+from database import SessionLocal, engine
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -41,35 +41,59 @@ def get_db():
 @app.get("/")
 def read_root():
     return RedirectResponse(url="/docs/")
+    #return {"greeting":"Hello World!"}
 
 
-'''
-# Get all items
-@app.get("/items")
-def get_items():
-    return db
+###############################
+########## ITEM CRUD ##########
+###############################
+
+# get all items
+@app.get("/items/", response_model=List[schemas.Item])
+def get_items(db: Session = Depends(get_db)):
+    items = db.query(models.Item).all()
+    return items
+
 
 # get single item
-@app.get("/items/{item_id}")
-def get_a_item(item_id: int):
-    item = item_id - 1
-    return db[item]
+@app.get("/items/{item_id}", response_model=List[schemas.Item])
+def get_a_item( item_id: int, db: Session= Depends(get_db)):
+    item = db.query(models.Item).filter(models.Item.id == item_id).first()
+    return item
+
 
 # add a new item
-@app.post("/items")
-def add_item(item: Item):
-    db.append(item.dict())
-    return db[-1]
+@app.post("/items", response_model=List[schemas.Item])
+def add_items(item: schemas.Item, db: Session= Depends(get_db)):
+    db_item = models.Item(name=item.name, location=item.location, description=item.description, date=item.date)
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    #return db_item
+    #return {"Success": "db_item"}
+    return {"Task": "Addition Successful"}
+#working fine
+#check error 500 : internal server error
+
 
 #update a item
-@app.put("/items/{item_id}")
-def update_item(item_id: int, item: Item):
-    db[item_id-1] = item.dict()
-    return db[item_id-1]
+@app.put("/items/{item_id}", response_model=List[schemas.Item])
+def update_items(item: schemas.Item, db: Session= Depends(get_db)):
+    db.query(models.Item).filter(models.Item.id==item.id).update({models.Item.name: item.name, models.Item.location: item.location})
+    db.commit()
+    db_item = db.query(models.Item).filter(models.Item.id==item.id).first()
+    #return db_item
+    #return {"Success": "db_item"}
+    return {"Task": "Updation Successful"}
+#working fine
+#check error 500 : internal server error
+
 
 # delete a item
-@app.delete("/items/{item_id}")
-def delete_item(item_id: int):
-    db.remove(item_id-1)
-    return {"task": "deletion successful"}
-'''
+@app.delete("/items/{item_id}", response_model=List[schemas.Item])
+def delete_item(item_id: int, db: Session= Depends(get_db)):
+    db.query(models.Item).filter(models.Item.id == item_id).delete()
+    db.commit()
+    return {"Task": "Deletion Successful"}
+#working fine
+#check error 500 : internal server error
