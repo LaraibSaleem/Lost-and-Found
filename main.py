@@ -11,7 +11,8 @@ from starlette.responses import RedirectResponse
 import models.item_model, models.user_model
 from database import SessionLocal, engine
 import schemas.item_schema, schemas.user_schema
-
+#password regex
+import re
 
 models.item_model.Base.metadata.create_all(bind=engine)
 models.user_model.Base.metadata.create_all(bind=engine)
@@ -46,7 +47,7 @@ def read_root():
     #return {"greeting":"Hello World!"}
 
 
-'''
+
 ###############################
 ########## USER CRUD ##########
 ###############################
@@ -54,26 +55,37 @@ def read_root():
 # sign up
 @app.post("/users", response_model=List[schemas.user_schema.User])
 def user_sign_up( user: schemas.user_schema.User, db: Session= Depends(get_db)):
-    db_user = db.query(models.User).filter(models.User.uname == user.uname).first()
+    db_user = db.query(models.user_model.User).filter(models.user_model.User.uname == user.uname).first()
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     else:
-        db_user2 = models.User(uname=user.uname, pw=user.pw)
-        db.add(db_user2)
-        db.commit()
-        db.refresh(db_user2)
-        return [db_user2]
+        #check pw regex
+        # password regex
+        reg = "^(.+[a-z])(.+[A-Z])(.+\d)(.+[\W])[\w\W]{8,20}$"
+        # compiling regex
+        reg_match = re.compile(reg)
+        # checking regex
+        res = re.search(reg_match, user.pw)
+        if res:
+            db_user2 = models.user_model.User(uname=user.uname, pw=user.pw)
+            db.add(db_user2)
+            db.commit()
+            db.refresh(db_user2)
+            return [db_user2]
+        else:
+            raise HTTPException(status_code=400, detail="Password too weak")
+
 
 
 # log in
 @app.get("/users", response_model=List[schemas.user_schema.User])
 def user_log_in( uname: str, pw:str, db: Session= Depends(get_db)):
-    db_user = db.query(models.User).filter(models.User.uname == uname and models.User.pw == pw).first()
+    db_user = db.query(models.user_model.User).filter(models.user_model.User.uname == uname and models.user_model.User.pw == pw).first()
     if db_user:
         return [db_user]
     else:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-'''
+
 
 
 
