@@ -95,9 +95,10 @@ def user_log_in( uname: str, pw:str, db: Session= Depends(get_db)):
 
 # get all items
 @app.get("/items/", response_model=List[schemas.item_schema.Item])
-def get_items(db: Session = Depends(get_db)):
-    items = db.query(models.item_model.Item).all()
+def get_items(db: Session = Depends(get_db), skip: int = 0, limit: int = 100):
+    items = db.query(models.item_model.Item).offset(skip).limit(limit).all() #pagination added
     return items
+
 
 
 # search item through name
