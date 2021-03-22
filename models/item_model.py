@@ -4,7 +4,6 @@ from database import Base
 
 
 # item model to store items
-
 class Item(Base):
     __tablename__ = "Item"
 
@@ -14,3 +13,5 @@ class Item(Base):
     description= Column(String(255))
     date = Column(Date)  
     #pic:  
+
+

@@ -8,11 +8,13 @@ from starlette.responses import RedirectResponse
 
 #importing other files of the app
 #from . import models, schemas
-import models, schemas
+import models.item_model, models.user_model
 from database import SessionLocal, engine
+import schemas.item_schema, schemas.user_schema
 
 
-models.Base.metadata.create_all(bind=engine)
+models.item_model.Base.metadata.create_all(bind=engine)
+models.user_model.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -44,55 +46,78 @@ def read_root():
     #return {"greeting":"Hello World!"}
 
 
+'''
+###############################
+########## USER CRUD ##########
+###############################
+
+# sign up
+@app.post("/users", response_model=List[schemas.user_schema.User])
+def user_sign_up( user: schemas.user_schema.User, db: Session= Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.uname == user.uname).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    else:
+        db_user2 = models.User(uname=user.uname, pw=user.pw)
+        db.add(db_user2)
+        db.commit()
+        db.refresh(db_user2)
+        return [db_user2]
+
+
+# log in
+@app.get("/users", response_model=List[schemas.user_schema.User])
+def user_log_in( uname: str, pw:str, db: Session= Depends(get_db)):
+    db_user = db.query(models.User).filter(models.User.uname == uname and models.User.pw == pw).first()
+    if db_user:
+        return [db_user]
+    else:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+'''
+
+
+
 ###############################
 ########## ITEM CRUD ##########
 ###############################
 
 # get all items
-@app.get("/items/", response_model=List[schemas.Item])
+@app.get("/items/", response_model=List[schemas.item_schema.Item])
 def get_items(db: Session = Depends(get_db)):
-    items = db.query(models.Item).all()
+    items = db.query(models.item_model.Item).all()
     return items
 
 
-# get single item
-@app.get("/items/{item_id}", response_model=List[schemas.Item])
-def get_a_item( item_id: int, db: Session= Depends(get_db)):
-    item = db.query(models.Item).filter(models.Item.id == item_id).first()
-    return item
+# search item through name
+@app.get("/items/{item_name}", response_model=List[schemas.item_schema.Item])
+def search_item_by_name( item_name: str, db: Session= Depends(get_db)):
+    item = db.query(models.item_model.Item).filter(models.item_model.Item.name == item_name).first()
+    return [item]
 
 
 # add a new item
-@app.post("/items", response_model=List[schemas.Item])
-def add_items(item: schemas.Item, db: Session= Depends(get_db)):
-    db_item = models.Item(name=item.name, location=item.location, description=item.description, date=item.date)
+@app.post("/items", response_model=List[schemas.item_schema.Item])
+def add_items(item: schemas.item_schema.Item, db: Session= Depends(get_db)):
+    db_item = models.item_model.Item(name=item.name, location=item.location, description=item.description, date=item.date)
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
-    #return db_item
-    #return {"Success": "db_item"}
-    return {"Task": "Addition Successful"}
-#working fine
-#check error 500 : internal server error
+    return [db_item]
 
 
 #update a item
-@app.put("/items/{item_id}", response_model=List[schemas.Item])
-def update_items(item: schemas.Item, db: Session= Depends(get_db)):
-    db.query(models.Item).filter(models.Item.id==item.id).update({models.Item.name: item.name, models.Item.location: item.location})
+@app.put("/items/{item_id}", response_model=List[schemas.item_schema.Item])
+def update_items(item: schemas.item_schema.Item, db: Session= Depends(get_db)):
+    db.query(models.item_model.Item).filter(models.item_model.Item.id==item.id).update({models.item_model.Item.name: item.name, models.item_model.Item.location: item.location})
     db.commit()
-    db_item = db.query(models.Item).filter(models.Item.id==item.id).first()
-    #return db_item
-    #return {"Success": "db_item"}
-    return {"Task": "Updation Successful"}
-#working fine
-#check error 500 : internal server error
+    db_item = db.query(models.item_model.Item).filter(models.item_model.Item.id==item.id).first()
+    return [db_item]
 
 
 # delete a item
-@app.delete("/items/{item_id}", response_model=List[schemas.Item])
+@app.delete("/items/{item_id}", response_model=List[schemas.item_schema.Item])
 def delete_item(item_id: int, db: Session= Depends(get_db)):
-    db.query(models.Item).filter(models.Item.id == item_id).delete()
+    db.query(models.item_model.Item).filter(models.item_model.Item.id == item_id).delete()
     db.commit()
     return {"Task": "Deletion Successful"}
 #working fine

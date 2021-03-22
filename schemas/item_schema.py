@@ -1,7 +1,9 @@
 from datetime import date
 from pydantic import BaseModel
 
-# item model to store items
+
+
+# item schema to store items
 class Item(BaseModel):
     id: int
     name: str
