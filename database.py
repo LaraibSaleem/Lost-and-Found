@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker
 
 #engine = create_engine("mysql+pymysql://root:@<host>[3306]/lost_and_found")
 
-engine = create_engine("mysql+pymysql://root@localhost/lost_and_found")
+engine = create_engine("mysql+pymysql://root@localhost/lost_and_found_alembic")
 
 #print("***************ENGINE*************** =",engine)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
