@@ -25,7 +25,7 @@ config = context.config
 fileConfig(config.config_file_name)
 
 
-config.set_main_option("sqlalchemy.url", os.environ["SQLALCHEMY_DATABASE_URI"])
+config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
 
 
 # add your model's MetaData object here
